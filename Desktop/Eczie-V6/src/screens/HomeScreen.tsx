@@ -12,6 +12,7 @@ import React from 'react';
 import { ScrollView, StatusBar, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GreetingHeader } from '../components/home/GreetingHeader';
+import { AffirmationCard } from '../components/home/AffirmationCard';
 
 /**
  * HomeScreen - Main dashboard screen.
@@ -28,6 +29,7 @@ export function HomeScreen() {
         <GreetingHeader />
       </SafeAreaView>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+        <AffirmationCard />
         <View style={styles.placeholder}>
           {/* Future content: Quick actions, recent logs, insights summary */}
         </View>
@@ -48,7 +50,7 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#0b1220',
   },
   content: {
     paddingHorizontal: 16,
