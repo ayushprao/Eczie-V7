@@ -1,0 +1,365 @@
+
+---
+
+# 🧩 Eczie — Technical Stack Preferences (v2.2, Product + OSS Integrated)
+
+**Design principle**
+
+> Maximize learning speed *without* compromising PHI safety or long-term credibility.
+
+Optimized for:
+
+* Early real users (not demos)
+* HIPAA correctness
+* Fast iteration on insight quality and retention
+* Minimal operational overhead
+
+---
+
+## A) Frontend — Mobile (React Native / Expo)
+
+### A1. Core Platform
+
+* **Framework:** React Native + Expo (EAS)
+* **Language:** TypeScript (strict)
+* **Runtime:** Node 18+
+* **Target:** iOS-first, Android supported
+* **OTA Updates:** Enabled (non-PHI UI logic only)
+
+**Invariant:** No PHI ever embedded in OTA-delivered code paths.
+
+---
+
+### A2. State & Data Management
+
+* **UI / ephemeral state:** `zustand`
+  Used for:
+
+  * Symptom log form state
+  * Routine completion toggles
+  * Draft buffer status
+  * UI-only flags
+
+* **Server state:** `@tanstack/react-query`
+  Used for:
+
+  * Logs
+  * Routines
+  * Insights
+  * Chat history
+
+* **Validation (shared):** `zod`
+
+  * Same schemas used in:
+
+    * Frontend form validation
+    * Backend request validation
+    * AI feature extraction
+
+* **Caching:** In-memory only
+
+* **Offline posture:**
+
+  * ❌ No full offline sync
+  * ✅ **Local draft buffer for Symptom Logs only**
+
+#### Local Draft Buffer (Product-Critical)
+
+* Scope: Symptom Log form only
+* Storage: `expo-secure-store`
+* Behavior:
+
+  * Persist draft if save fails due to network
+  * Auto-flush on next successful connection
+  * UI indicator: “Saved locally, will sync when online”
+* Draft TTL: 48 hours
+
+This is a **retention safety net**, not infra ambition.
+
+---
+
+### A3. Navigation
+
+* **Router:** `@react-navigation/native`
+* **Tabs:** Home · Insights · Chat · Profile
+* **Stacks:** Screen-specific
+* **Modals:** Consent, onboarding, photo capture
+
+---
+
+### A4. Forms, Input & Data Quality
+
+* **Form management:** `react-hook-form`
+
+  * Low re-render cost
+  * Works cleanly with sliders and conditional inputs
+
+* **Schema validation:** `zod`
+
+  * Prevents garbage data from ever hitting storage or AI
+
+**Rule:** No form submits without schema validation.
+
+---
+
+### A5. UI, Motion & Accessibility
+
+* **Styling:** NativeWind (Tailwind tokens synced from Figma)
+* **Animation engine:** `react-native-reanimated`
+* **Animation abstraction:** `moti` (used sparingly)
+* **Gestures:** `react-native-gesture-handler`
+* **Accessibility:** WCAG AA
+
+  * ≥44px tap targets
+  * Screen-reader friendly sliders
+  * Reduced-motion support
+
+**Design constraint:**
+Animations must reinforce calm, reassurance, or progress. Otherwise, they’re removed.
+
+---
+
+### A6. Charts & Visualization (Insights)
+
+* **Primary charts:** `victory-native`
+
+  * Line charts (severity trends)
+  * Bar charts (symptom averages)
+
+* **Low-level support:** `react-native-svg`
+
+  * Used only when Victory abstraction is insufficient
+
+**Explicitly avoided:** highly animated or non-accessible chart libraries.
+
+---
+
+### A7. Networking & Uploads
+
+* **HTTP client:** Axios
+
+  * JWT interceptor
+  * Retry only on idempotent GETs
+
+* **Uploads:** Signed URL → direct PUT to Supabase Storage
+
+**PHI rule:**
+No photos, notes, or symptom content pass through the app server.
+
+---
+
+### A8. Secure Storage
+
+* **Secrets & tokens:** `expo-secure-store` / Keychain
+* **Photos:** In-memory only
+* **No persistent media cache**
+* **No service-role keys in client**
+
+---
+
+### A9. Authentication
+
+* **Auth provider:** Supabase Auth
+
+  * Apple Sign-In (primary)
+  * Passwordless email fallback
+* Token refresh via `supabase-js`
+
+---
+
+### A10. Camera & Media
+
+* **Picker:** `expo-image-picker`
+* **Processing:** `expo-image-manipulator`
+
+  * EXIF stripping
+  * Resize + compression
+  * MIME + size validation
+
+Flow:
+
+1. Capture/select
+2. Process locally
+3. Request signed URL
+4. Upload directly
+5. Memory cleared immediately
+
+---
+
+### A11. Error Tracking & Analytics
+
+* **Crash monitoring:** Sentry
+
+  * PHI scrubbed in `beforeSend`
+  * No attachments in prod
+
+* **Analytics constraints:**
+
+  * No raw user text
+  * No timestamps
+  * No emails or IDs
+  * Only hashed `user_ref`
+  * Aggregated behavioral events only
+
+---
+
+## B) Backend — Supabase + Fastify
+
+### B1. Core Architecture
+
+* **API framework:** Fastify + TypeScript
+* **Auth:** Supabase JWT verification
+* **Validation:** `zod`
+* **API contracts:** `@fastify/swagger` + `zod-to-openapi`
+* **Shared types:** `openapi-typescript`
+
+---
+
+### B2. Data Layer (Supabase)
+
+* **Database:** Postgres (RLS everywhere)
+* **Storage:** Supabase private buckets
+* **Queues:** Supabase Queues / `pgmq`
+* **Scheduling:** `pg_cron`
+* **Edge Functions:** Auth-sensitive endpoints
+* **Cloud Run:** AI jobs, report generation
+
+---
+
+### B3. Logging & Routine APIs
+
+Core:
+
+* `/api/logs`
+* `/api/routines`
+* `/api/insights`
+* `/api/chat`
+* `/api/upload-url`
+
+Additional:
+
+* `/api/logs/draft-sync`
+  Reconciles locally buffered drafts
+
+---
+
+### B4. AI / Insights Architecture
+
+#### Two-Layer Insight Model
+
+##### Instant Insights (Non-LLM)
+
+* Deterministic rules
+* Executed on log save
+* Examples:
+
+  * High stress + low sleep
+  * Routine missed 2 days
+* Zero latency
+* Fully explainable
+
+##### Reflective Insights (LLM)
+
+* Weekly or on-demand
+* Narrative summaries
+* Pattern detection
+* Conservative language only
+
+---
+
+### B5. PHI Transform Library (v1)
+
+* Mandatory for all LLM + analytics payloads
+* Implemented with:
+
+  * `lodash-es` (selective imports only)
+
+Initial transformations:
+
+* Strip free text
+* Bucket dates (7 / 14 days)
+* Aggregate counts and percentages
+
+Deferred:
+
+* Aggressive rounding
+* Heavy obfuscation
+
+Invariant:
+
+* Interface stable, internals evolve
+
+---
+
+### B6. LLM Proxy Rules
+
+* Client never calls LLM directly
+* No raw notes or photos
+* Aggregated, anonymized data only
+* Confidence thresholds gate output
+* Language enforced:
+
+  * “Associated with”
+  * “Correlated with”
+  * Never “Caused by”
+
+---
+
+### B7. Background Jobs
+
+* Weekly insights
+* Adherence aggregation
+* PDF report generation
+* Cleanup tasks
+
+Monitoring:
+
+* Job latency
+* Failure rate
+* Cost per user
+
+---
+
+### B8. Security & Compliance
+
+* RLS enforced everywhere
+* RLS tests required for all schema changes
+* Service-role keys server-side only
+* Full PHI access audit logging
+
+---
+
+## C) Operational Policies (Adjusted)
+
+### C1. Developer Ergonomics
+
+* Canonical anonymized dataset
+* Single CLI command to reset dev DB
+* No PHI in dev by default
+* PHI access gated by training + approval
+
+---
+
+### C2. Metrics That Matter
+
+Product-truth metrics:
+
+* Insight → action conversion
+* Insight view → adherence delta (48h)
+* Draft save frequency
+* Log completion time
+
+---
+
+## D) What This Stack Optimizes For
+
+✅ Safety
+✅ Trust
+✅ Explainability
+✅ Learning speed
+
+❌ Premature scale complexity
+❌ Full offline sync engines
+❌ AI magic theater
+
+---
