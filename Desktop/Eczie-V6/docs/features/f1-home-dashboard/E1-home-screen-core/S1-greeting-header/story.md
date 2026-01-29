@@ -13,14 +13,17 @@ As a user, I want to see a personalized greeting with the current date and my st
 
 - [ ] Display current date in format "WEEKDAY · MONTH DAY" (e.g., "FRIDAY · JUNE 21")
 - [ ] Display personalized greeting "Welcome back, {firstName}"
+- [ ] Display Eczie mascot illustration in the hero header area
 - [ ] Display streak badge showing "{N} days strong" if streak > 0
 - [ ] Header renders correctly on all supported device sizes
 
 ## UX Requirements
 
-- Header is fixed at top of screen
+- Header is fixed at top of screen with gradient/illustrated background
 - Greeting uses user's first name from profile
-- Streak badge styled as pill/badge element
+- Eczie mascot positioned within the hero header (friendly, calming character)
+- Mascot illustration is decorative (not interactive)
+- Streak badge styled as pill/badge element, positioned near mascot
 - If streak is 0, hide streak badge (do not show "0 days")
 
 ## Non-Functional Requirements

@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "Eczie",
+    "slug": "eczie",
+    "version": "1.0.0",
+    "platforms": ["ios", "android"],
+    "ios": {
+      "supportsTablet": true
+    },
+    "plugins": [
+      "expo-localization"
+    ]
+  }
+}
