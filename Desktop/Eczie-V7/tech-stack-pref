@@ -1,0 +1,355 @@
+
+---
+
+# 🧩 Eczie — Technical Stack Preferences (v2.3, Convex Backend Variant)
+
+**Design Principle**
+Maximize learning speed without compromising PHI safety or long-term credibility.
+
+Optimized for:
+
+* Early real users
+* PHI-safe architecture
+* Fast iteration on insight quality
+* Minimal infra overhead
+* Clean migration surface if needed
+
+---
+
+# A) Frontend — Mobile (React Native / Expo)
+
+*(Unchanged unless backend coupling requires it)*
+
+## A1. Core Platform
+
+* Framework: React Native + Expo (EAS)
+* Language: TypeScript (strict)
+* Runtime: Node 18+
+* Target: iOS-first, Android supported
+* OTA Updates: Enabled (non-PHI UI logic only)
+
+**Invariant:** No PHI embedded in OTA-delivered code paths.
+
+---
+
+## A2. State & Data Management
+
+UI / Ephemeral state: `zustand`
+
+Used for:
+
+* Symptom log form state
+* Routine toggles
+* Draft buffer status
+* UI flags
+
+Server state: `@tanstack/react-query` OR Convex React client hooks
+
+Used for:
+
+* Logs
+* Routines
+* Insights
+* Chat history
+
+Validation: `zod`
+
+* Frontend form validation
+* Convex mutation input validation
+* AI feature extraction contracts
+
+Caching:
+
+* In-memory only
+* Convex reactive cache
+
+Offline posture:
+❌ No full offline sync
+✅ Local draft buffer for Symptom Logs only
+
+---
+
+### Local Draft Buffer (Product-Critical)
+
+Scope: Symptom Log only
+Storage: `expo-secure-store`
+
+Behavior:
+
+* Persist draft if mutation fails
+* Auto-flush when network restored
+* UI indicator: “Saved locally, will sync when online”
+* TTL: 48 hours
+
+Retention safety net only. Not offline-first ambition.
+
+---
+
+## A3–A11 (UI, Forms, Charts, Media, Analytics)
+
+Unchanged from v2.2 with one exception:
+
+### A7. Networking & Uploads (Updated)
+
+Convex client replaces Axios for core mutations.
+
+Uploads:
+
+* Signed URL issued via Convex action
+* Direct PUT to storage provider (see Backend section)
+
+PHI rule:
+No photos or free text routed through third-party services beyond encrypted storage.
+
+---
+
+# B) Backend — Convex Architecture
+
+This is where real changes happen.
+
+---
+
+## B1. Core Architecture
+
+Backend: Convex (TypeScript)
+
+Components:
+
+* Queries (read)
+* Mutations (write)
+* Actions (external calls, storage, AI)
+* Scheduled functions (cron)
+* HTTP actions (for PDF export if needed)
+
+No separate Fastify API layer in baseline Plan B.
+
+Optional:
+Retain thin external server only for:
+
+* Advanced AI proxy control
+* Complex report generation
+* Regulatory isolation
+
+But default architecture:
+Mobile → Convex directly
+
+---
+
+## B2. Data Layer
+
+Database: Convex document database
+
+Collections:
+
+* users
+* logs
+* routines
+* routineCompletions
+* insights
+* chatMessages
+* weeklyReports
+
+Design constraint:
+
+* One user_id on every document
+* Explicit per-user access checks inside every query/mutation
+
+There is no RLS like Postgres.
+Security enforced via Convex auth + explicit checks in code.
+
+Invariant:
+Every query must filter by authenticated user ID.
+
+---
+
+## B3. Authentication
+
+Auth provider options:
+
+Option A (simplest):
+
+* Convex Auth + Apple Sign-In
+* Email/password fallback
+
+Option B (more control):
+
+* Clerk or Auth0 integrated with Convex
+
+All Convex functions:
+
+* Use authenticated identity context
+* Reject unauthenticated access immediately
+
+---
+
+## B4. Storage (PHI Photos)
+
+Convex file storage OR external provider (recommended):
+
+Recommended:
+
+* Cloudflare R2
+* Google Cloud Storage
+* AWS S3
+
+Flow:
+
+1. Client requests upload token via Convex action
+2. Signed URL returned
+3. Client uploads directly
+4. File reference stored in Convex
+
+Invariant:
+
+* No raw photos stored in logs document
+* Only storage reference ID
+
+---
+
+## B5. Logging & Routine Mutations
+
+Convex Mutations:
+
+* createLog
+* updateLog
+* toggleRoutineCompletion
+* createRoutine
+* updateRoutine
+* deleteRoutine
+* syncDraftLog
+
+Convex Queries:
+
+* getTodayLog
+* getWeeklyLogs
+* getRoutineStatus
+* getInsights
+* getChatHistory
+
+All writes validated via zod.
+
+---
+
+## B6. AI / Insights Architecture (Convex Version)
+
+Two-Layer Insight Model retained.
+
+### Instant Insights (Non-LLM)
+
+* Executed in mutation after log save
+* Deterministic rules
+* Stored in insights collection
+* Fully explainable
+
+Zero external calls.
+
+---
+
+### Reflective Insights (LLM)
+
+Executed via Convex Action.
+
+Flow:
+
+1. Query aggregated logs
+2. Pass through PHI Transform layer
+3. Send anonymized aggregate to LLM
+4. Store response with confidence metadata
+
+Guardrails:
+
+* No raw free-text notes
+* No image data
+* Conservative language enforcement
+
+---
+
+## B7. PHI Transform Library (Convex Variant)
+
+Still mandatory.
+
+Transformations:
+
+* Strip free text
+* Aggregate counts
+* Bucket time ranges
+* Remove exact timestamps
+* No user identifiers
+
+Invariant:
+LLM never sees identifiable PHI.
+
+---
+
+## B8. Background Jobs
+
+Convex scheduled functions:
+
+* Weekly insight generation
+* Routine adherence aggregation
+* Cleanup expired drafts
+* Trigger risk recalculation
+
+Monitoring:
+
+* Execution latency
+* Error frequency
+* External API cost
+
+---
+
+## B9. Security & Compliance Adjustments
+
+Because Convex lacks RLS:
+
+Security model shifts to:
+
+* Auth-based user isolation
+* Explicit user_id checks in every function
+* No admin bypass functions exposed
+* Audit log collection for sensitive reads
+
+Service keys:
+
+* Never in client
+* Only in Convex environment variables
+
+---
+
+# C) Operational Policies (Convex Variant)
+
+## C1. Developer Ergonomics
+
+* Seed script for anonymized dev dataset
+* CLI reset script
+* No PHI in local dev
+* Strict environment separation (dev / prod)
+
+## C2. Metrics
+
+Same as v2.2:
+
+* Insight → action conversion
+* Adherence delta
+* Log completion time
+* Draft recovery rate
+
+---
+
+# D) What This Stack Optimizes For
+
+✅ Developer velocity
+✅ Real-time reactivity
+✅ Minimal API boilerplate
+✅ Fast iteration on insight UX
+
+Trade-offs:
+
+❌ Less mature data model than Postgres
+❌ No native RLS
+❌ More responsibility in code-level security
+❌ Harder future migration back to relational DB
+
+---
+
+
