@@ -88,6 +88,9 @@ shifts.
    corrupt file), **When** the hero header renders, **Then**
    the header remains visually intact with no broken-image icon
    and no layout shift.
+3. **Given** the user context indicates a flare signal, **When**
+   the hero header renders, **Then** the mascot uses the
+   empathetic concern variant (not the calm variant).
 
 ---
 
@@ -146,6 +149,9 @@ shifts.
   (Constitution §VI).
 - **FR-009**: All interactive elements within the hero area MUST
   meet the 44pt minimum touch target (Constitution §VI).
+- **FR-010**: The hero mascot MUST support at least two visual
+  states tied to user context: calm (default/no flare signal) and
+  empathetic concern (flare signal), without alarming visuals.
 
 ### Key Entities
 
@@ -164,8 +170,8 @@ shifts.
   screen mount with authenticated profile data available.
 - **SC-002**: Streak badge displays the correct count matching the
   user's consecutive log history with zero discrepancy.
-- **SC-003**: When streak is 0, 100% of test sessions show
-  encouraging copy instead of "0 days strong".
+- **SC-003**: When streak is 0, 100% of test sessions hide the
+  streak badge area entirely (no badge and no streak copy).
 - **SC-004**: Mascot illustration loads without triggering any
   layout shift (Cumulative Layout Shift delta = 0 for the hero
   area).

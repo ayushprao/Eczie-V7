@@ -70,3 +70,13 @@ Deliver the Home hero header with localized date, personalized greeting, mascot 
 - `formatHeroDate.test.ts`: locale/uppercase behavior
 - `buildGreeting.test.ts`: fallback + punctuation safety
 - `homeHero.query.test.ts`: streak derivation scenarios and auth scoping
+
+## Validation Run (2026-03-02)
+
+- Date label formatter implemented and tested against uppercase locale output.
+- Greeting fallback and no-dangling-comma behavior covered in selector + component tests.
+- Streak derivation edge cases (empty, contiguous, grace day, missed day) covered in backend tests.
+- Mascot calm vs empathetic variant selection implemented in query + component tests.
+- Audit-log emission for sensitive reads implemented and asserted in contract tests.
+- Touch-target minimum and WCAG AA contrast assertions added in `HeroHeader.test.tsx`.
+- Performance budget test scaffold added in `HeroHeader.performance.test.tsx` (`<=300ms` target).

@@ -5,7 +5,7 @@
 
 ## Summary
 
-Implement the Home hero header so authenticated users see: (1) a localized uppercase date label, (2) a personalized greeting with safe fallback/truncation behavior, (3) Eczie mascot background artwork, and (4) a streak badge that appears only when streak >= 1. The implementation will use a Convex query to provide user-scoped hero data and a React Native header component that preserves layout stability during loading.
+Implement the Home hero header so authenticated users see: (1) a localized uppercase date label, (2) a personalized greeting with safe fallback/truncation behavior, (3) Eczie mascot background artwork with calm/empathetic variants, and (4) a streak badge that appears only when streak >= 1. The implementation will use a Convex query to provide user-scoped hero data, audit sensitive read access, and a React Native header component that preserves layout stability during loading.
 
 ## Technical Context
 
@@ -27,6 +27,7 @@ Implement the Home hero header so authenticated users see: (1) a localized upper
 
 - **I. PHI Safety First**: PASS
   - All data access is user-scoped via authenticated Convex context and explicit `user_id` filtering.
+  - Hero query read path emits audit logs for sensitive access events.
   - Hero output excludes raw notes/photos and only returns first-name + derived streak count.
 - **II. Empathy-First UX**: PASS
   - Streak behavior explicitly hides zero-state badge and avoids guilt copy.
@@ -40,6 +41,7 @@ Implement the Home hero header so authenticated users see: (1) a localized upper
   - Mascot load failure keeps stable layout with no broken-image artifact.
 - **VI. Accessibility & Visual Consistency**: PASS
   - Layout budget includes fixed hero zones/skeleton placeholders to prevent shift.
+  - Mascot supports calm vs empathetic concern visual states based on user context.
   - Text contrast and touch-target standards are required acceptance checks.
 - **VII. Simplicity & YAGNI**: PASS
   - No new caching layer, no extra backend service, no unnecessary abstraction.
@@ -48,12 +50,12 @@ Implement the Home hero header so authenticated users see: (1) a localized upper
 
 ### Post-Design Gate Re-Check
 
-- **I. PHI Safety First**: PASS - Contract restricts response to minimal non-sensitive fields and enforces auth.
+- **I. PHI Safety First**: PASS - Contract restricts response to minimal non-sensitive fields, enforces auth, and includes audit logging on sensitive reads.
 - **II. Empathy-First UX**: PASS - Contract + data model codify zero-streak hide behavior and neutral fallback copy.
 - **III. Speed of Entry**: PASS - Header work remains lightweight and non-blocking.
 - **IV. Explainability Over Simplification**: PASS - Streak rules documented in data model and contract.
 - **V. Graceful Degradation**: PASS - Loading and asset-failure behavior captured in quickstart tests.
-- **VI. Accessibility & Visual Consistency**: PASS - Skeleton and truncation rules are defined with explicit validation steps.
+- **VI. Accessibility & Visual Consistency**: PASS - Skeleton/truncation plus mascot-state rules are defined with explicit validation steps.
 - **VII. Simplicity & YAGNI**: PASS - Uses existing preferred stack primitives only.
 
 **Gate Status (Post-Design)**: PASS

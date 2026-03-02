@@ -34,3 +34,5 @@
 - All items passed validation on first review.
 - Spec references Constitution §II (empathy-first UX) and §VI (accessibility & visual consistency) for principle alignment.
 - No [NEEDS CLARIFICATION] markers — all ambiguities resolved with reasonable defaults documented in the Assumptions section.
+- Post-implementation remediation aligned FR/SC consistency (`FR-006` + `SC-003`) and added mascot state requirement (`FR-010`).
+- Implementation tasks now include audit-log checks for sensitive reads and explicit contrast/performance validation coverage.

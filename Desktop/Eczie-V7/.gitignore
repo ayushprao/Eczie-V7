@@ -1,0 +1,36 @@
+# Node / TypeScript
+node_modules/
+dist/
+build/
+coverage/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.env
+.env.*
+!.env.example
+
+# Expo / React Native
+.expo/
+.expo-shared/
+*.expo.*
+
+# TypeScript
+*.tsbuildinfo
+
+# IDE / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.tmp
+*.swp
+
+# Python / misc caches
+__pycache__/
+.pytest_cache/
+
+# Local artifacts
+*.local
